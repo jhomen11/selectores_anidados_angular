@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { switchMap, tap } from "rxjs/operators";
+
 import { PaisesService } from '../../services/paises.service';
-import { PaisSmall } from '../../interfaces/paises.interfaces';
+import { PaisSmall, Pais } from '../../interfaces/paises.interfaces';
 
 @Component({
   selector: 'app-selector-page',
@@ -11,12 +13,15 @@ export class SelectorPageComponent implements OnInit {
 
   miFormulario: FormGroup = this.fb.group({
     region: ['', Validators.required],
-    pais: ['', Validators.required]
+    pais: ['', Validators.required],
+    frontera: ['', Validators.required]
+
   })
 
-  //Llenar paises
+  //Llenar selectores
   regiones: string[] = []
   paises: PaisSmall[] = []
+  fronteras: string[] = []
 
   constructor( private fb: FormBuilder,
                 private paisesService: PaisesService ) { }
@@ -25,15 +30,44 @@ export class SelectorPageComponent implements OnInit {
     this.regiones = this.paisesService.regiones
 
     //cuando cambia la region
-    this.miFormulario.get('region')?.valueChanges
-      .subscribe( region =>{
-        console.log(region)
+    // this.miFormulario.get('region')?.valueChanges
+    //   .subscribe( region =>{
+    //     console.log(region)
 
-        this.paisesService.getPaisesPorRegion( region)
-            .subscribe( paises =>{
-              this.paises = paises
-            })
-      })
+    //     this.paisesService.getPaisesPorRegion( region)
+    //         .subscribe( paises =>{
+    //           this.paises = paises
+    //         })
+    //   })
+
+    //cuando cambia la region
+    this.miFormulario.get('region')?.valueChanges
+        .pipe(
+          tap( ( _ ) => {
+            this.miFormulario.get('pais')?.reset('')  //Reiniciar el select de paises cuando cambie la region
+          }),
+          switchMap( region => this.paisesService.getPaisesPorRegion( region))
+        ).subscribe( valor =>{
+          this.paises = valor
+        })
+
+    //Cuando cambia la región
+    this.miFormulario.get('pais')?.valueChanges
+        .pipe(
+          tap( ( _ ) => {
+            this.miFormulario.get('frontera')?.reset('')  //Reiniciar el select de paises cuando cambie la region
+          }),
+          switchMap( codigo => this.paisesService.getPaisPorCodigo(codigo))
+          )
+        .subscribe( valor => {
+          console.log(valor)
+          console.log(valor?.borders)
+          // console.log(valor?.capital)
+          this.fronteras = valor?.borders || []
+          // console.log(this.fronteras)
+        })
+
+
   }
 
   guardar(){
