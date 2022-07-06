@@ -23,6 +23,9 @@ export class SelectorPageComponent implements OnInit {
   paises: PaisSmall[] = []
   fronteras: string[] = []
 
+  //UI
+  cargando = false
+
   constructor( private fb: FormBuilder,
                 private paisesService: PaisesService ) { }
 
@@ -45,10 +48,12 @@ export class SelectorPageComponent implements OnInit {
         .pipe(
           tap( ( _ ) => {
             this.miFormulario.get('pais')?.reset('')  //Reiniciar el select de paises cuando cambie la region
+            this.cargando = true
           }),
           switchMap( region => this.paisesService.getPaisesPorRegion( region))
         ).subscribe( valor =>{
           this.paises = valor
+          this.cargando = false
         })
 
     //Cuando cambia la región
@@ -56,13 +61,13 @@ export class SelectorPageComponent implements OnInit {
         .pipe(
           tap( ( _ ) => {
             this.miFormulario.get('frontera')?.reset('')  //Reiniciar el select de paises cuando cambie la region
+            this.cargando = true
+
           }),
           switchMap( codigo => this.paisesService.getPaisPorCodigo(codigo))
           )
         .subscribe( valor => {
-          console.log(valor)
-          console.log(valor?.borders)
-          // console.log(valor?.capital)
+          this.cargando = false
           this.fronteras = valor?.borders || []
           // console.log(this.fronteras)
         })

@@ -31,7 +31,6 @@ export class PaisesService {
 
     const url: string = `https://restcountries.com/v2/alpha/${codigo}`
 
-    console.log(url)
     return this.http.get<Pais>(url)
   }
 }
